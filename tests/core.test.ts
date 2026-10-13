@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {parseWeather,intensity} from '../src/lib/weather';
-import {collect,emptyProgress,transfer} from '../src/lib/storage';
+import {canTransfer,collect,emptyProgress,transfer} from '../src/lib/storage';
 const current={time:Math.floor(Date.now()/1000),rain:0,showers:0,temperature_2m:25,weather_code:61,is_day:1};
 test('zero rain stays dry even with a rainy weather code',()=>assert.equal(parseWeather({current}).rain,0));
 test('missing rain is unknown, never silently dry',()=>assert.equal(parseWeather({current:{...current,rain:null}}).rain,null));
@@ -9,15 +9,18 @@ test('rain and showers combine without counting snow',()=>assert.equal(parseWeat
 test('stale readings rejected',()=>assert.throws(()=>parseWeather({current:{...current,time:1}})));
 test('gameplay intensity boundaries',()=>assert.deepEqual([null,0,2.5,2.6,7.5,7.6].map(intensity),['Unknown','No rain','Light rain','Moderate rain','Moderate rain','Heavy rain']));
 test('capacity, lifetime and transfer preserve water',()=>{let p=emptyProgress();for(let i=0;i<110;i++)p=collect(p,true);assert.equal(p.bucket,100);assert.equal(p.lifetime,100);assert.equal(p.heavy,100);p=transfer(p);assert.equal(p.tank,100);assert.equal(p.bucket,0);assert.equal(transfer(p),p)});
+test('partial buckets can be moved into storage without losing water',()=>{const p={...emptyProgress(),bucket:17,tank:40,stored:40};const next=transfer(p);assert.equal(next.bucket,0);assert.equal(next.tank,57);assert.equal(next.stored,57);assert.equal(next.bucket+next.tank,p.bucket+p.tank)});
+test('idle cups must be full before transfer while active buckets may transfer early',()=>{assert.equal(canTransfer(17,'active'),true);assert.equal(canTransfer(17,'idle'),false);assert.equal(canTransfer(100,'idle'),true);assert.equal(canTransfer(0,'active'),false)});
 import {caughtByBucket} from '../src/game/collision';
 test('only a downward crossing inside bucket awards a catch',()=>{assert.equal(caughtByBucket(440,455,500,500),true);assert.equal(caughtByBucket(440,455,530,500),false);assert.equal(caughtByBucket(450,455,500,500),false);assert.equal(caughtByBucket(430,440,500,500),false);assert.equal(caughtByBucket(448,460,526,500),true)});
-import {waterPlant,validateCharacter} from '../src/lib/storage';
+import {choosePlant,replant,waterPlant,validateCharacter} from '../src/lib/storage';
 test('garden spending is exact and preserves lifetime achievements',()=>{const p={...emptyProgress(),tank:500,stored:500,lifetime:500};const next=waterPlant(p,0);assert.equal(next.tank,475);assert.equal(next.garden[0],1);assert.equal(next.stored,500);assert.equal(next.lifetime,500);assert.equal(p.garden[0],0)});
 test('garden rejects insufficient water, invalid plots, simulations and fully grown plants',()=>{const p={...emptyProgress(),tank:100,garden:[4,0,0]};assert.equal(waterPlant(p,0),p);assert.equal(waterPlant(p,1,true),p);assert.equal(waterPlant(p,5),p);const poor=emptyProgress();assert.equal(waterPlant(poor,1),poor)});
-test('character validation restores invalid choices safely',()=>assert.deepEqual(validateCharacter({skin:99,shirt:2,hair:-1}),{skin:0,shirt:2,hair:0}));
+test('garden flower choices persist through a full seed-to-bloom cycle',()=>{let p=choosePlant(emptyProgress(),0,4);assert.equal(p.gardenPlants[0],4);for(let i=0;i<4;i++)p=waterPlant({...p,tank:100},0);assert.equal(p.garden[0],4);assert.equal(choosePlant(p,0,2),p);p=replant(p,0);assert.equal(p.garden[0],0);assert.equal(p.gardenPlants[0],4);assert.equal(choosePlant(p,0,5).gardenPlants[0],5)});
+test('character validation restores invalid choices safely',()=>assert.deepEqual(validateCharacter({skin:99,shirt:2,hair:-1}),{skin:0,shirt:2,hair:0,outfit:0,accessory:0}));
 import {readProgress} from '../src/lib/storage';
-test('legacy saves keep water and gain default garden and character',()=>{const old={bucket:17,tank:600,lifetime:617,heavy:0,daily:{}};Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>JSON.stringify(old)}});try{const p=readProgress();assert.equal(p.bucket,17);assert.equal(p.tank,600);assert.equal(p.stored,600);assert.deepEqual(p.garden,[0,0,0]);assert.deepEqual(p.character,{skin:0,shirt:0,hair:0});}finally{Reflect.deleteProperty(globalThis,'localStorage')}});
-test('garden and character round-trip through saved progress',()=>{const saved={...emptyProgress(),tank:75,stored:100,garden:[1,0,0],character:{skin:2,shirt:1,hair:2}};Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>JSON.stringify(saved)}});try{assert.deepEqual(readProgress(),saved)}finally{Reflect.deleteProperty(globalThis,'localStorage')}});
+test('legacy saves keep water and gain default garden and character',()=>{const old={bucket:17,tank:600,lifetime:617,heavy:0,daily:{}};Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>JSON.stringify(old)}});try{const p=readProgress();assert.equal(p.bucket,17);assert.equal(p.tank,600);assert.equal(p.stored,600);assert.deepEqual(p.garden,[0,0,0]);assert.deepEqual(p.character,{skin:0,shirt:0,hair:0,outfit:0,accessory:0});}finally{Reflect.deleteProperty(globalThis,'localStorage')}});
+test('garden and character round-trip through saved progress',()=>{const saved={...emptyProgress(),tank:75,stored:100,garden:[1,0,0],character:{skin:2,shirt:1,hair:2,outfit:0,accessory:0}};Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:()=>JSON.stringify(saved)}});try{assert.deepEqual(readProgress(),saved)}finally{Reflect.deleteProperty(globalThis,'localStorage')}});
 import {dayPhase} from '../src/lib/daylight';
 const solar={timezone:'Asia/Manila',day:true,solar:[{sunrise:Date.parse('2026-10-13T06:00:00+08:00'),sunset:Date.parse('2026-10-13T18:00:00+08:00')},{sunrise:Date.parse('2026-10-14T06:00:00+08:00'),sunset:Date.parse('2026-10-14T18:00:00+08:00')}]};
 const at=(time:string)=>Date.parse('2026-10-13T'+time+':00+08:00');
@@ -26,3 +29,9 @@ test('sunrise and sunset transition boundaries',()=>{assert.equal(dayPhase(at('0
 test('solar day rolls over at location midnight',()=>{assert.equal(dayPhase(Date.parse('2026-10-14T00:10:00+08:00'),solar),'evening');assert.equal(dayPhase(Date.parse('2026-10-14T07:00:00+08:00'),solar),'morning')});
 test('missing solar readings safely fall back to current day/night',()=>{assert.equal(dayPhase(at('08:00'),{...solar,solar:[],day:false}),'evening');assert.equal(dayPhase(at('08:00'),{...solar,timezone:null}),'afternoon');assert.equal(dayPhase(at('08:00'),null),null)});
 test('API parsing keeps absolute solar timestamps and validates timezone',()=>{const parsed=parseWeather({current,timezone:'Asia/Manila',daily:{sunrise:[solar.solar[0].sunrise/1000,null],sunset:[solar.solar[0].sunset/1000,null]}});assert.equal(parsed.timezone,'Asia/Manila');assert.deepEqual(parsed.solar,[solar.solar[0]]);assert.equal(parseWeather({current,timezone:'not/a-zone'}).timezone,null)});
+import {alertText,weatherAlert,nextWeatherAlert} from '../src/lib/alerts';
+import {isUnlocked,availableCharacter} from '../src/lib/storage';
+test('weather alerts fire on transitions and never for unknown or refresh duplicates',()=>{assert.equal(nextWeatherAlert(null,weatherAlert(0)),'dry');assert.equal(nextWeatherAlert('dry',weatherAlert(0)),null);assert.equal(nextWeatherAlert('dry',weatherAlert(1)),'rain');assert.equal(nextWeatherAlert('rain',weatherAlert(9)),'heavy');assert.equal(nextWeatherAlert('heavy',weatherAlert(null)),null);assert.match(alertText.full,/FULL NA ANG BALDE/)});
+test('milestone looks unlock from real saved progress',()=>{const p=emptyProgress();assert.equal(isUnlocked(p,'outfit',1),false);assert.equal(isUnlocked({...p,lifetime:100},'outfit',1),true);assert.equal(isUnlocked({...p,stored:500,tank:0},'accessory',2),true);assert.equal(isUnlocked({...p,heavy:500},'accessory',3),true);assert.equal(isUnlocked({...p,lifetime:1000},'outfit',2),true);assert.equal(isUnlocked({...p,lifetime:100},'hair',3),true)});
+test('locked saved gear falls back safely without losing free choices',()=>{const p={...emptyProgress(),character:{skin:2,shirt:1,hair:3,outfit:2,accessory:3}};assert.deepEqual(availableCharacter(p),{skin:2,shirt:1,hair:0,outfit:0,accessory:0})});
+

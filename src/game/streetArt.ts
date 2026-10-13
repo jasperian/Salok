@@ -1,4 +1,4 @@
-import {skinColors,shirtColors,type Character} from '../lib/garden';
+import {plants,skinColors,shirtColors,type Character} from '../lib/garden';
 import Phaser from 'phaser';
 
 /** A hand-drawn, code-native pixel streetscape; no external image assets. */
@@ -48,19 +48,25 @@ export function drawCharacter(g:Phaser.GameObjects.Graphics,x:number,time:number
  g.clear();g.fillStyle(0x334f50,.25);g.fillEllipse(x,506,79,12);
  // Sandals, legs and shorts; animated steps follow the bucket movement.
  r(-17,481+step,12,17,skinColors[character.skin]);r(6,481-step,12,17,skinColors[character.skin]);r(-21,497+step,19,6,0x425c58);r(5,497-step,19,6,0x425c58);r(-18,471,37,15,0x476a6b);
- // Teal shirt and a round, dark-haired face.
- r(-22,424+bob,44,49,0x547f78);r(-16,425+bob,31,29,shirtColors[character.shirt]);r(-7,417+bob,14,12,skinColors[character.skin]);
+ // Outfits keep the bucket rim clear so collisions remain readable.
+ const outfitColor=character.outfit===1?0xe1c15f:character.outfit===2?0x8a6290:shirtColors[character.shirt];
+ r(-22,424+bob,44,49,0x547f78);r(-16,425+bob,31,29,outfitColor);r(-7,417+bob,14,12,skinColors[character.skin]);
+ if(character.outfit===1){r(-21,426+bob,5,43,0xcaa94c);r(16,426+bob,5,43,0xcaa94c);r(-2,430+bob,4,29,0xf6da83)}
+ if(character.outfit===2){for(let i=0;i<5;i++)r(-13+i*7,435+bob+(i%2)*7,4,6,0xdfc3df)}
  r(-21,381+bob,41,18,0x3d4741);r(-25,391+bob,49,22,0x3d4741);r(-19,396+bob,38,24,skinColors[character.skin]);r(-13,416+bob,26,7,skinColors[character.skin]);r(-24,401+bob,6,12,skinColors[character.skin]);r(19,401+bob,6,12,skinColors[character.skin]);
  r(-18,391+bob,16,8,0x3d4741);r(-2,388+bob,21,9,0x3d4741);r(-11,403+bob,4,4,0x364742);r(8,403+bob,4,4,0x364742);r(-3,414+bob,8,2,0x956a57);r(-16,410+bob,6,3,0xca8d6d);r(12,410+bob,6,3,0xca8d6d);
- if(character.hair===1){r(-27,390+bob,8,35,0x3d4741);r(20,390+bob,8,35,0x3d4741)}if(character.hair===2){r(-10,370+bob,22,16,0x3d4741);r(-6,367+bob,14,6,0x3d4741)}
+ if(character.hair===1){r(-27,390+bob,8,35,0x3d4741);r(20,390+bob,8,35,0x3d4741)}if(character.hair===2){r(-10,370+bob,22,16,0x3d4741);r(-6,367+bob,14,6,0x3d4741)}if(character.hair===3){r(20,395+bob,9,32,0x3d4741);r(23,419+bob,7,9,0x927d65)}
+ if(character.accessory===1){r(-24,380+bob,48,10,0xd49272);r(-31,389+bob,62,5,0xb57960)}
+ if(character.accessory===2){r(-20,371+bob,40,22,0xb99f77);r(-33,388+bob,66,7,0x9a7d5d)}
+ if(character.accessory===3){r(-22,488+step,20,13,0xe2bb60);r(4,488-step,20,13,0xe2bb60)}
  // Both arms reach forward to grip the rim. Its collision line stays at y=449.
- r(-29,430+bob,11,17,shirtColors[character.shirt]);r(20,430+bob,11,17,shirtColors[character.shirt]);r(-32,442,10,16,skinColors[character.skin]);r(23,442,10,16,skinColors[character.skin]);
+ r(-29,430+bob,11,17,outfitColor);r(20,430+bob,11,17,outfitColor);r(-32,442,10,16,skinColors[character.skin]);r(23,442,10,16,skinColors[character.skin]);
  g.lineStyle(3,0xdad8b9);g.strokeCircle(x,453,22);r(-28,451,56,36,0x3d665d);r(-24,454,48,31,0xb8c5a7);r(-20,481-fill*.23,40,4+fill*.23,0x79b6b0);r(-30,449,60,6,0xe4e5c7);r(-20,460,5,18,0xe1e1c2);r(-22,485,44,5,0x52695e);r(-32,449,9,9,skinColors[character.skin]);r(24,449,9,9,skinColors[character.skin]);
 }
 
 
-export function drawGarden(g:Phaser.GameObjects.Graphics,growth:number[],time:number){
- growth.forEach((stage,i)=>{const x=600+i*45;g.fillStyle(0x9e7a62);g.fillRect(x,376,26,14);g.fillStyle(0xccaa81);g.fillRect(x-2,373,30,5);g.fillStyle(0x665e4a);g.fillRect(x+3,373,20,3);if(!stage)return;const y=373-stage*9;g.fillStyle(0x66896a);g.fillRect(x+11,y,4,375-y);for(let j=0;j<stage;j++){g.fillRect(x+2+(j%2)*12,365-j*8,13,5)}if(stage===4){const sway=Math.round(Math.sin(time*.001+i));g.fillStyle([0xd88c83,0xd5ba65,0xf2efcf][i]);g.fillRect(x+5+sway,y-8,16,12);g.fillRect(x+9+sway,y-12,8,20);g.fillStyle(0xdac786);g.fillRect(x+11+sway,y-4,4,4)}});
+export function drawGarden(g:Phaser.GameObjects.Graphics,growth:number[],selected:number[],time:number){
+ growth.forEach((stage,i)=>{const x=600+i*45;g.fillStyle(0x9e7a62);g.fillRect(x,376,26,14);g.fillStyle(0xccaa81);g.fillRect(x-2,373,30,5);g.fillStyle(0x665e4a);g.fillRect(x+3,373,20,3);if(!stage)return;const y=373-stage*9;g.fillStyle(0x66896a);g.fillRect(x+11,y,4,375-y);for(let j=0;j<stage;j++){g.fillRect(x+2+(j%2)*12,365-j*8,13,5)}if(stage===4){const sway=Math.round(Math.sin(time*.001+i));g.fillStyle(Number.parseInt(plants[selected[i]??i].color.slice(1),16));g.fillRect(x+5+sway,y-8,16,12);g.fillRect(x+9+sway,y-12,8,20);g.fillStyle(0xdac786);g.fillRect(x+11+sway,y-4,4,4)}});
 }
 export function drawRainAtmosphere(g:Phaser.GameObjects.Graphics,time:number,rain:number){
  const count=rain>7.5?75:rain>2.5?45:24;g.lineStyle(1,0xd0e6df,.24);
