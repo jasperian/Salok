@@ -3,7 +3,7 @@ import {useState} from 'react';
 
 const steps=[
  {icon:'☁',eyebrow:'WELCOME, KA-ULAN',title:'Catch the weather outside.',body:'Choose your location so the game can read fresh local weather. Collectible drops appear only when real rain is detected.',tip:'Your precise coordinates are never displayed or saved.'},
- {icon:'🪣',eyebrow:'CHOOSE YOUR PACE',title:'Move the bucket—or leave a cup.',body:'Active catcher lets you move with the arrow keys, A/D, mouse, or touch. Idle cup lets you place a cup in the street and leave it catching while the game stays open.',tip:'An idle cup must reach 100 drops before it can be poured.'},
+ {icon:'🪣',eyebrow:'CHOOSE YOUR PACE',title:'Move the bucket—or leave it out.',body:'Active catcher lets you move with the arrow keys, A/D, mouse, or touch. Idle bucket lets you place the pail in the street and leave it catching while the game stays open.',tip:'An idle bucket must reach 100 drops before it can be poured.'},
  {icon:'▥',eyebrow:'SAVE EVERY DROP',title:'Pour collected rain into storage.',body:'Active buckets can store any amount. Your stored water stays on this device and can be spent in your virtual garden.',tip:'Practice weather never changes saved progress.'},
  {icon:'✿',eyebrow:'GROW SOMETHING LOVELY',title:'Turn rain into Philippine blooms.',body:'Visit Garden, choose flowers for three plots, and water them through Seed, Sprout, Seedling, Budding, and Bloom.',tip:'You can replant a plot after its flower blooms.'}
 ] as const;

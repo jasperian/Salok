@@ -42,7 +42,7 @@ export function drawStreet(g: Phaser.GameObjects.Graphics, time: number, night: 
  g.lineStyle(2,night?0x263c4a:0x657e78,.8);for(let j=0;j<3;j++){g.beginPath();g.moveTo(0,166+j*10);for(let x=0;x<=960;x+=20)g.lineTo(x,166+j*10+Math.sin(x/960*Math.PI)*40);g.strokePath()}
 }
 
-export function drawCharacter(g:Phaser.GameObjects.Graphics,x:number,time:number,moving:boolean,fill:number,character:Character){
+export function drawCharacter(g:Phaser.GameObjects.Graphics,x:number,time:number,moving:boolean,fill:number,character:Character,bucketSkin='bucket-classic',spriteBucket=false){
  const r=(dx:number,y:number,w:number,h:number,c:number)=>{g.fillStyle(c);g.fillRect(Math.round(x+dx),Math.round(y),w,h)};
  const step=moving?Math.sin(time*.018)*4:0,bob=moving?Math.abs(step)*.4:Math.sin(time*.003)*.7;
  g.clear();g.fillStyle(0x334f50,.25);g.fillEllipse(x,506,79,12);
@@ -59,14 +59,41 @@ export function drawCharacter(g:Phaser.GameObjects.Graphics,x:number,time:number
  if(character.accessory===1){r(-24,380+bob,48,10,0xd49272);r(-31,389+bob,62,5,0xb57960)}
  if(character.accessory===2){r(-20,371+bob,40,22,0xb99f77);r(-33,388+bob,66,7,0x9a7d5d)}
  if(character.accessory===3){r(-22,488+step,20,13,0xe2bb60);r(4,488-step,20,13,0xe2bb60)}
- // Both arms reach forward to grip the rim. Its collision line stays at y=449.
+ // Both arms reach forward to grip the pail. Its collision line stays at y=449.
  r(-29,430+bob,11,17,outfitColor);r(20,430+bob,11,17,outfitColor);r(-32,442,10,16,skinColors[character.skin]);r(23,442,10,16,skinColors[character.skin]);
- g.lineStyle(3,0xdad8b9);g.strokeCircle(x,453,22);r(-28,451,56,36,0x3d665d);r(-24,454,48,31,0xb8c5a7);r(-20,481-fill*.23,40,4+fill*.23,0x79b6b0);r(-30,449,60,6,0xe4e5c7);r(-20,460,5,18,0xe1e1c2);r(-22,485,44,5,0x52695e);r(-32,449,9,9,skinColors[character.skin]);r(24,449,9,9,skinColors[character.skin]);
+ drawCatchBucket(g,x,449,fill,bucketSkin,spriteBucket);r(-32,449,9,9,skinColors[character.skin]);r(24,449,9,9,skinColors[character.skin]);
+}
+
+/** Chunky paint-pail silhouette with a readable water gauge. Top-left is the catch line. */
+export function drawCatchBucket(g:Phaser.GameObjects.Graphics,x:number,y:number,fill:number,skin='bucket-classic',spriteBucket=false){
+ const r=(dx:number,dy:number,w:number,h:number,c:number)=>{g.fillStyle(c);g.fillRect(Math.round(x+dx),Math.round(y+dy),w,h)};
+ const level=Math.max(0,Math.min(100,fill)),bar=Math.round(level*.34);
+ const palette=skin==='bucket-sky'?{rim:0x185f89,mid:0x2387bd,label:0xe9e5c9,band:0x69bdd4,base:0x164f72}:skin==='bucket-sunshine'?{rim:0x765239,mid:0xbd6249,label:0xe1bb3e,band:0xf0d76a,base:0x71432f}:skin==='bucket-sampaguita'?{rim:0x416755,mid:0x538069,label:0xf3eed9,band:0xb8cda9,base:0x315744}:{rim:0x064936,mid:0x0d694b,label:0xf0d447,band:0xd9553f,base:0x073c31};
+ if(!spriteBucket){
+ // Squared handle behind the pail keeps the shape crisp at game scale.
+ r(-27,-2,4,12,0xc8cdb1);r(23,-2,4,12,0xc8cdb1);r(-23,-8,6,4,0xc8cdb1);r(17,-8,6,4,0xc8cdb1);r(-17,-12,34,4,0xc8cdb1);
+ // Open rim and the visible water surface.
+ r(-31,0,62,5,palette.rim);r(-27,5,54,4,palette.base);if(level>0){r(-24,5,48,3,0x58c7cf);r(-17,5,17,1,0xc8fbf4)}
+ // Stepped paint-pail body: deep green lid/base with a warm wraparound label.
+ r(-29,9,58,5,palette.rim);r(-27,14,54,5,palette.mid);r(-25,19,50,25,palette.label);r(-23,20,46,4,palette.label);r(-25,24,50,4,palette.band);r(-23,28,46,12,palette.label);r(-22,40,44,5,palette.rim);r(-18,45,36,3,palette.base);r(-23,43,46,2,palette.mid);
+ // Center badge on the label. The detached gauge sits beside the pail.
+ r(-3,30,6,7,0xf7f4d8);r(-1,28,2,2,0xf7f4d8);
+ }
+ r(34,7,9,40,0xb9c7b1);r(36,9,5,36,0x173d39);if(bar>0)r(37,44-bar,3,bar,0x53cbd2);for(let i=0;i<4;i++)r(36,11+i*9,5,1,0xd6f1e8);
 }
 
 
-export function drawGarden(g:Phaser.GameObjects.Graphics,growth:number[],selected:number[],time:number){
+export function drawGarden(g:Phaser.GameObjects.Graphics,growth:number[],selected:number[],time:number,decorations:string[]=[]){
  growth.forEach((stage,i)=>{const x=600+i*45;g.fillStyle(0x9e7a62);g.fillRect(x,376,26,14);g.fillStyle(0xccaa81);g.fillRect(x-2,373,30,5);g.fillStyle(0x665e4a);g.fillRect(x+3,373,20,3);if(!stage)return;const y=373-stage*9;g.fillStyle(0x66896a);g.fillRect(x+11,y,4,375-y);for(let j=0;j<stage;j++){g.fillRect(x+2+(j%2)*12,365-j*8,13,5)}if(stage===4){const sway=Math.round(Math.sin(time*.001+i));g.fillStyle(Number.parseInt(plants[selected[i]??i].color.slice(1),16));g.fillRect(x+5+sway,y-8,16,12);g.fillRect(x+9+sway,y-12,8,20);g.fillStyle(0xdac786);g.fillRect(x+11+sway,y-4,4,4)}});
+ if(decorations.includes('garden-fence')){g.fillStyle(0xb7925f);for(let x=586;x<748;x+=18)g.fillRect(x,366,5,28);g.fillRect(584,374,166,4);g.fillRect(584,386,166,4)}
+ if(decorations.includes('garden-butterflies')){for(const [x,y,c] of [[612,330,0xdc8b66],[690,342,0x8a6ba5]]){g.fillStyle(c);g.fillRect(x,y,5,3);g.fillRect(x+7,y,5,3);g.fillStyle(0x4d5c51);g.fillRect(x+5,y+1,2,5)}}
+ if(decorations.includes('garden-lantern')){g.fillStyle(0x536e58);g.fillRect(752,337,4,53);g.fillRect(746,337,12,4);g.fillStyle(0xe7bf69);g.fillRect(742,341,16,18);g.fillStyle(0xffe2a0,.35);g.fillRect(738,357,24,15)}
+}
+
+export function drawSceneDecorations(g:Phaser.GameObjects.Graphics,items:string[],night:boolean){
+ if(items.includes('street-bench')){g.fillStyle(0x8d6749);g.fillRect(106,371,72,8);g.fillRect(112,382,60,7);g.fillRect(118,389,6,17);g.fillRect(160,389,6,17);g.fillStyle(0x5d5546);g.fillRect(106,379,72,4)}
+ if(items.includes('street-bike')){g.lineStyle(4,0x526f78);g.strokeCircle(805,383,14);g.strokeCircle(851,383,14);g.lineBetween(805,383,827,359);g.lineBetween(827,359,851,383);g.lineBetween(805,383,839,383);g.lineBetween(827,359,839,383);g.lineStyle(3,0xd2c69d);g.lineBetween(824,355,838,355)}
+ if(items.includes('street-parol'))for(const x of [260,480,700]){g.fillStyle(night?0xf3c968:0xc88565);g.fillRect(x,212,5,22);g.fillRect(x-7,219,19,7);g.fillRect(x-3,215,11,15);g.fillStyle(0xe7d58a);g.fillRect(x+1,222,3,18)}
 }
 export function drawRainAtmosphere(g:Phaser.GameObjects.Graphics,time:number,rain:number){
  const count=rain>7.5?75:rain>2.5?45:24;g.lineStyle(1,0xd0e6df,.24);
