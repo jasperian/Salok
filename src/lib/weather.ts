@@ -24,9 +24,9 @@ export function intensity(r:number|null){return r===null?'Unknown':r===0?'No rai
 export async function fetchWeather(p:Place,signal:AbortSignal){const q=new URLSearchParams({latitude:String(p.latitude),longitude:String(p.longitude),current:'temperature_2m,precipitation,rain,showers,weather_code,is_day',timeformat:'unixtime',timezone:'auto',daily:'sunrise,sunset',forecast_days:'2'});const r=await fetch('https://api.open-meteo.com/v1/forecast?'+q,{signal});if(!r.ok)throw new Error('Weather unavailable');return parseWeather(await r.json());}
 export async function searchCities(name:string,signal:AbortSignal):Promise<Place[]>{const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name='+encodeURIComponent(name),{signal});if(!r.ok)throw new Error('City search unavailable');const d=await r.json();return (d.results??[]).map((v:{name:string;admin1?:string;country:string;latitude:number;longitude:number})=>({name:[v.name,v.admin1,v.country].filter(Boolean).join(', '),latitude:v.latitude,longitude:v.longitude}));}
 export async function reverseGeocode(latitude:number,longitude:number,signal:AbortSignal):Promise<string|null>{
- const q=new URLSearchParams({format:'jsonv2',lat:String(latitude),lon:String(longitude),zoom:'10',addressdetails:'1',layer:'address'});
- const r=await fetch('https://nominatim.openstreetmap.org/reverse?'+q,{signal,headers:{Accept:'application/json'}});
+ const q=new URLSearchParams({latitude:String(latitude),longitude:String(longitude)});
+ const r=await fetch('/api/location-name?'+q,{signal,headers:{Accept:'application/json'},cache:'no-store'});
  if(!r.ok)throw new Error('Place name unavailable');
- return parseReversePlace(await r.json());
+ const data=await r.json() as {name?:unknown};return typeof data.name==='string'&&data.name.trim()?data.name:null;
 }
 
