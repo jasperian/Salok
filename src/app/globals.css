@@ -59,3 +59,38 @@ html,body{min-height:100%;transition:background-color .25s ease}html[data-theme=
 }
 .brand-wordmark{display:block;width:160px;height:80px;object-fit:cover;object-position:center 53%;image-rendering:pixelated}
 @media(max-width:700px){.brand-wordmark{width:128px;height:64px}}
+
+/* Keep the mobile masthead balanced even when every account action is visible. */
+@media(max-width:700px){
+ header{display:grid;grid-template-columns:minmax(0,1fr) auto;height:auto;min-height:118px;padding:8px 0 0;align-items:center;column-gap:10px}
+ .brand{min-width:0;height:58px;overflow:hidden}
+ .brand-wordmark{width:124px;height:62px;margin-left:-2px}
+ .header-actions{justify-self:end;gap:5px;min-width:0}
+ .header-actions>button{flex:0 0 auto}
+ .help-button,.icon-button,.install-button,.account-button{display:grid;place-items:center;width:36px;height:36px;min-width:36px;padding:0;border:1px solid var(--line);border-radius:50%;font-size:16px}
+ .account-button{font-size:0}
+ .account-button>span{width:24px;height:24px;flex-basis:24px;font-size:11px}
+ .install-button span{display:none}
+ header nav{grid-column:1/-1;order:initial;width:100%;height:44px;min-width:0;justify-content:space-between;gap:4px;border-top:1px solid var(--line)}
+ header nav button{height:44px;padding:0 4px;font-size:11px}
+}
+@media(max-width:390px){
+ .shell{padding:0 12px}
+ .brand-wordmark{width:112px;height:56px}
+ .header-actions{gap:3px}
+ .help-button,.icon-button,.install-button,.account-button{width:33px;height:33px;min-width:33px}
+ header nav button{font-size:10px}
+}
+
+/* Mobile fullscreen is a three-layer stage: toolbar, game/HUD, controls. */
+@media(pointer:coarse) and (orientation:landscape){
+ .scene-card:is(.expanded,.native-fullscreen){--mobile-topbar:48px;--mobile-footer:52px;width:100dvw;height:100dvh;padding:0;background:#1a3038}
+ .scene-card:is(.expanded,.native-fullscreen) .scene-toolbar{top:0;height:var(--mobile-topbar);padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));white-space:nowrap}
+ .scene-card:is(.expanded,.native-fullscreen) .scene-wrap{position:absolute;top:var(--mobile-topbar);right:env(safe-area-inset-right);bottom:var(--mobile-footer);left:env(safe-area-inset-left);display:flex;align-items:center;justify-content:center}
+ .scene-card:is(.expanded,.native-fullscreen) .game-canvas{width:min(100%,calc((100dvh - var(--mobile-topbar) - var(--mobile-footer))*960/520));height:auto;max-height:100%;aspect-ratio:960/520}
+ .scene-card:is(.expanded,.native-fullscreen) .compact-hud{bottom:var(--mobile-footer);height:30px;padding:5px max(16px,env(safe-area-inset-right)) 5px max(16px,env(safe-area-inset-left));font-size:10px;pointer-events:none}
+ .scene-card:is(.expanded,.native-fullscreen) .scene-footer{bottom:0;height:var(--mobile-footer);min-height:var(--mobile-footer);padding:5px max(14px,env(safe-area-inset-right)) 5px max(14px,env(safe-area-inset-left));flex-wrap:nowrap;gap:clamp(10px,3vw,34px)}
+ .scene-card:is(.expanded,.native-fullscreen) .scene-footer .mode-picker{order:0}
+ .scene-card:is(.expanded,.native-fullscreen) .scene-footer button{min-height:40px;padding:0 5px}
+ .scene-card:is(.expanded,.native-fullscreen) .rotate-hint{display:none}
+}
