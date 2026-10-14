@@ -57,3 +57,5 @@ html,body{min-height:100%;transition:background-color .25s ease}html[data-theme=
 @media(pointer:coarse) and (orientation:portrait){
  .scene-card:is(.expanded,.native-fullscreen) .rotate-hint{display:block;flex-shrink:0;text-align:center;padding:10px 16px;background:#21383d;color:#edf4e9;font-size:12px}
 }
+.brand-wordmark{display:block;width:160px;height:80px;object-fit:cover;object-position:center 53%;image-rendering:pixelated}
+@media(max-width:700px){.brand-wordmark{width:128px;height:64px}}
