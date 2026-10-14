@@ -41,6 +41,10 @@ For server-rendered email confirmation, set the Supabase **Confirm signup** emai
 
 Password reset is available from the sign-in dialog and returns to the app's password-update form. Test email verification, username updates, cloud saves, and account deletion against both localhost and the final production domain before launch.
 
+## Web analytics
+
+The root layout includes Vercel Web Analytics for anonymous aggregate visitor and page-view counts. It uses the official `@vercel/analytics` Next.js integration without custom events or user/game properties. Enable Web Analytics for the project in the Vercel dashboard, deploy this version, and visit the production site to begin collecting data. The privacy page discloses the page, referrer, approximate region, device, operating-system, and browser information described by Vercel. Vercel states that Web Analytics does not use cookies and resets its visitor hash daily.
+
 ## Weather and privacy
 Uses https://open-meteo.com/en/docs current temperature, precipitation, rain, showers, weather code and day/night, with Unix observation timestamps. Rain + showers controls spawning; precipitation is not used to award water because it includes snow. Missing rainfall is unknown. Rainfall thresholds (2.5 and 7.5 mm/hr) are gameplay choices. Data is model-estimated and may differ from local conditions. Review Open-Meteo licensing and service terms for commercial use.
 
