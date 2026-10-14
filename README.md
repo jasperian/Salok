@@ -26,13 +26,12 @@ Import this folder as a Git repository in Vercel, select Next.js, and deploy wit
 
 ## Accounts and cloud saves
 
-Accounts are optional. Guests continue to save progress in `localStorage`; verified email/password accounts and Google accounts also store the same validated progress in Supabase. Location, music, appearance, scene, play mode, and developer simulation state are never included in the cloud save. Cloud saves are client-generated convenience saves and are not cheat-proof.
+Accounts are optional. Guests continue to save progress in `localStorage`; verified email/password accounts also store the same validated progress in Supabase. Signed-in players can set a 2–20 character in-game username, which is stored in their Supabase Auth user metadata and shown in the game header. Location, music, appearance, scene, play mode, and developer simulation state are never included in the cloud save. Cloud saves are client-generated convenience saves and are not cheat-proof.
 
-1. Create a Supabase project and run [`supabase/migrations/20261014000000_player_saves.sql`](supabase/migrations/20261014000000_player_saves.sql) in its SQL editor. This creates the save table, revision field, timestamp trigger, and row-level security policies.
-2. In Authentication → Providers, keep Email enabled with **Confirm email** turned on. Enable Google and enter the client ID and secret from Google Cloud.
+1. Create a Supabase project and run both SQL files in [`supabase/migrations`](supabase/migrations) in filename order. They create protected cloud saves and the authenticated self-deletion function. Account deletion removes the Auth user and cascades to the cloud save.
+2. In Authentication → Providers, keep Email enabled with **Confirm email** turned on. Google login is not used.
 3. Add `http://127.0.0.1:3000/**` and the production `https://your-domain.example/**` under Authentication → URL Configuration → Redirect URLs. Set the production domain as the Site URL.
-4. In Google Cloud, add Supabase's provider callback URL, shown on the Supabase Google provider screen, as an authorized redirect URI. The application itself returns through `/auth/callback`.
-5. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Add the same values to the Vercel project. These public values are safe to expose; access is enforced by authentication and row-level security. Never add the Supabase service-role key to this application.
+4. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Add the same values to the Vercel project. These public values are safe to expose; access is enforced by authentication and row-level security. Never add the Supabase service-role key to this application.
 
 For server-rendered email confirmation, set the Supabase **Confirm signup** email template link to:
 
@@ -40,7 +39,7 @@ For server-rendered email confirmation, set the Supabase **Confirm signup** emai
 {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
 ```
 
-Password reset is available from the sign-in dialog and returns to the app's password-update form. Google and email identities follow Supabase's provider-linking rules. Test email verification and OAuth against both localhost and the final production domain before launch.
+Password reset is available from the sign-in dialog and returns to the app's password-update form. Test email verification, username updates, cloud saves, and account deletion against both localhost and the final production domain before launch.
 
 ## Weather and privacy
 Uses https://open-meteo.com/en/docs current temperature, precipitation, rain, showers, weather code and day/night, with Unix observation timestamps. Rain + showers controls spawning; precipitation is not used to award water because it includes snow. Missing rainfall is unknown. Rainfall thresholds (2.5 and 7.5 mm/hr) are gameplay choices. Data is model-estimated and may differ from local conditions. Review Open-Meteo licensing and service terms for commercial use.
