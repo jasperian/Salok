@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {parseWeather,intensity} from '../src/lib/weather';
+import {parseWeather,parseReversePlace,intensity} from '../src/lib/weather';
 import {achievementValue,achievements,buyShopItem,canTransfer,collect,completedMissions,discover,drumCapacity,drumTier,emptyProgress,equipShopItem,rainStreak,recordMission,transfer} from '../src/lib/storage';
 const current={time:Math.floor(Date.now()/1000),rain:0,showers:0,temperature_2m:25,weather_code:61,is_day:1};
 test('zero rain stays dry even with a rainy weather code',()=>assert.equal(parseWeather({current}).rain,0));
@@ -8,6 +8,8 @@ test('missing rain is unknown, never silently dry',()=>assert.equal(parseWeather
 test('rain and showers combine without counting snow',()=>assert.equal(parseWeather({current:{...current,rain:1,showers:2,precipitation:7}}).rain,3));
 test('stale readings rejected',()=>assert.throws(()=>parseWeather({current:{...current,time:1}})));
 test('gameplay intensity boundaries',()=>assert.deepEqual([null,0,2.5,2.6,7.5,7.6].map(intensity),['Unknown','No rain','Light rain','Moderate rain','Moderate rain','Heavy rain']));
+test('reverse location uses a friendly city, region and country label',()=>assert.equal(parseReversePlace({address:{city:'Manila',state:'Metro Manila',country:'Philippines'}}),'Manila, Metro Manila, Philippines'));
+test('reverse location supports municipalities and rejects malformed results',()=>{assert.equal(parseReversePlace({address:{municipality:'Kalayaan',state:'Laguna',country:'Philippines'}}),'Kalayaan, Laguna, Philippines');assert.equal(parseReversePlace({address:{}}),null);assert.equal(parseReversePlace(null),null)});
 test('capacity, lifetime and transfer preserve water',()=>{let p=emptyProgress();for(let i=0;i<110;i++)p=collect(p,true);assert.equal(p.bucket,100);assert.equal(p.lifetime,100);assert.equal(p.heavy,100);assert.equal(p.fullBuckets,1);p=transfer(p);assert.equal(p.tank,100);assert.equal(p.bucket,0);assert.equal(transfer(p),p)});
 test('partial buckets can be moved into storage without losing water',()=>{const p={...emptyProgress(),bucket:17,tank:40,stored:40};const next=transfer(p);assert.equal(next.bucket,0);assert.equal(next.tank,57);assert.equal(next.stored,57);assert.equal(next.bucket+next.tank,p.bucket+p.tank)});
 test('idle cups must be full before transfer while active buckets may transfer early',()=>{assert.equal(canTransfer(17,'active'),true);assert.equal(canTransfer(17,'idle'),false);assert.equal(canTransfer(100,'idle'),true);assert.equal(canTransfer(0,'active'),false)});
