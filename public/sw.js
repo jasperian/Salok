@@ -1,7 +1,7 @@
-const VERSION='rain-catcher-v4';
+const VERSION='rain-catcher-v5';
 const SHELL=`${VERSION}-shell`;
 const ASSETS=`${VERSION}-assets`;
-const CORE=['/','/manifest.webmanifest','/icon-192.png','/icon-512.png','/bucket-pixel.png','/drum-pixel.png'];
+const CORE=['/','/manifest.webmanifest','/icon-192.png?v=salok-1','/icon-512.png?v=salok-1','/icon-apple.png?v=salok-1','/bucket-pixel.png','/drum-pixel.png'];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(SHELL);await cache.addAll(CORE);const response=await cache.match('/');const html=await response?.text();const paths=[...new Set([...((html||'').matchAll(/(?:src|href)="(\/_next\/static\/[^"?]+(?:\?[^" ]*)?)"/g))].map(match=>match[1].replaceAll('&amp;','&')))];await Promise.allSettled(paths.map(path=>cache.add(path)));await self.skipWaiting()})())});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('rain-catcher-')&&key!==SHELL&&key!==ASSETS)await caches.delete(key);await self.clients.claim()})())});
 self.addEventListener('message',event=>{if(event.data?.type!=='PRECACHE_URLS')return;event.waitUntil((async()=>{const cache=await caches.open(ASSETS);await Promise.allSettled((event.data.urls||[]).filter(url=>{try{const u=new URL(url,self.location.origin);return u.origin===self.location.origin&&u.pathname.startsWith('/_next/static/')}catch{return false}}).map(url=>cache.add(url)))})())});
